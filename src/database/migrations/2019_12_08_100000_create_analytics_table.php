@@ -42,7 +42,7 @@ class CreateAnalyticsTable extends Migration
                 ->references('id')
                 ->on(ServerAnalytics::getAnalyticsDataTable());
             $table->string('key');
-            $table->text('value')->nullable();
+            $table->string('value')->nullable();
 
             $table->index(['analytics_id', 'key', 'value']);
         });

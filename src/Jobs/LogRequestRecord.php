@@ -32,7 +32,7 @@ class LogRequestRecord implements ShouldQueue
 
     public function handle()
     {
-        $analytics = Analytics::create($this->requestData);
+        $analytics = Analytics::create(collect($this->requestData)->except('meta', 'relations')->toArray());
 
         collect($this->requestData['meta'] ?? [])
             ->each(function ($meta) use ($analytics) {
