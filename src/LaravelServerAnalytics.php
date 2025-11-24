@@ -13,6 +13,8 @@ class LaravelServerAnalytics
     /** @var array */
     public $excludeRoutes = [];
 
+    public $excludeIps = [];
+
     /** @var array */
     public $excludeMethods = [];
 
@@ -87,6 +89,16 @@ class LaravelServerAnalytics
     }
 
     /**
+     * Add routes to exclude from tracking.
+     *
+     * Routes can use wildcard matching.
+     */
+    public function addIpExclusions(array $ips): void
+    {
+        $this->excludeIps = array_merge($this->excludeIps, $ips);
+    }
+
+    /**
      * Add methods to exclude from tracking.
      */
     public function addMethodExclusions(array $methods): void
@@ -103,6 +115,10 @@ class LaravelServerAnalytics
      */
     public function shouldTrackRequest(Request $request): bool
     {
+        if (in_array($request->ip(), $this->excludeIps, true)) {
+            return false;
+        }
+
         if ($this->inExcludeRoutesArray($request) || $this->inExcludeMethodsArray($request)) {
             return false;
         }
