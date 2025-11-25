@@ -119,6 +119,10 @@ class LaravelServerAnalytics
             return false;
         }
 
+        if($this->isKnownBotIp($request->ip())) {
+            return false;
+        }
+
         if ($this->inExcludeRoutesArray($request) || $this->inExcludeMethodsArray($request)) {
             return false;
         }
@@ -128,6 +132,103 @@ class LaravelServerAnalytics
         }
 
         return true;
+    }
+
+    function isKnownBotIp(string $ip): bool
+    {
+        $botCidrs = $this->getKnownBotRanges();
+
+        foreach ($botCidrs as $cidr) {
+            if ($this->ipInCidr($ip, $cidr)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    function ipInCidr(string $ip, string $cidr): bool
+    {
+        if (str_contains($cidr, ':')) {
+            // IPv6
+            [$subnet, $mask] = explode('/', $cidr);
+            $ipBinary     = inet_pton($ip);
+            $subnetBinary = inet_pton($subnet);
+
+            if ($ipBinary === false || $subnetBinary === false) {
+                return false;
+            }
+
+            $maskBinary = str_repeat("\xff", $mask >> 3);
+            if ($mask % 8) {
+                $maskBinary .= chr(0xff << (8 - ($mask % 8)));
+            }
+            $maskBinary = str_pad($maskBinary, strlen($ipBinary), "\0");
+
+            return ($ipBinary & $maskBinary) === ($subnetBinary & $maskBinary);
+        }
+
+        // IPv4
+        [$subnet, $mask] = explode('/', $cidr);
+        $ipLong     = ip2long($ip);
+        $subnetLong = ip2long($subnet);
+        $maskLong   = -1 << (32 - $mask);
+
+        return ($ipLong & $maskLong) === ($subnetLong & $maskLong);
+    }
+
+    private function getKnownBotRanges(): array
+    {
+        return [
+            // Googlebot
+            '66.249.64.0/19',
+            '64.233.160.0/19',
+            '72.14.192.0/18',
+            '74.125.0.0/16',
+            '209.85.128.0/17',
+            '216.239.32.0/19',
+
+            // Bingbot
+            '13.66.0.0/16',
+            '13.67.0.0/16',
+            '13.68.0.0/14',
+            '40.77.167.0/24',
+            '40.77.188.0/24',
+            '52.167.0.0/16',
+
+            // DuckDuckBot
+            '20.191.45.212/32',
+            '20.185.79.47/32',
+            '40.88.21.235/32',
+            '40.70.20.60/32',
+
+            // YandexBot
+            '5.255.252.0/24',
+            '5.45.207.0/24',
+            '37.9.64.0/18',
+            '77.88.0.0/18',
+            '84.201.146.0/24',
+
+            // Baidu Spider
+            '123.125.71.0/24',
+            '180.76.15.0/24',
+            '180.76.6.0/24',
+
+            // AhrefsBot
+            '54.36.148.0/24',
+            '51.222.253.0/24',
+            '167.94.138.0/24',
+            '2a03:6f00:1::/48',
+
+            // SemrushBot
+            '46.229.168.0/24',
+            '185.191.171.0/24',
+
+            // Majestic / MJ12Bot
+            '5.45.207.0/24',
+            '37.235.48.0/24',
+            '89.38.96.0/19',
+        ];
     }
 
     /**
