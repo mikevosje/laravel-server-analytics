@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Jaybizzle\CrawlerDetect\CrawlerDetect;
 use OhSeeSoftware\LaravelServerAnalytics\Models\Analytics;
+use OhSeeSoftware\LaravelServerAnalytics\Models\AnalyticsBlockIp;
 use Symfony\Component\HttpFoundation\Response;
 use ipinfo\ipinfo\IPinfo;
 
@@ -178,9 +179,18 @@ class LaravelServerAnalytics
             "AS3598"
         ];
 
-        return $asn &&
+        $block = $asn &&
             (in_array($asn, $blockedAsns, true) ||
                 !empty(array_filter($blockedAsns, static fn($n) => str_contains($asn, $n))));
+
+        if($block) {
+            AnalyticsBlockIp::query()->updateOrCreate([
+                'ip' => $ip
+            ]);
+        }
+
+        return $block;
+
     }
 
     function isKnownBotIp(string $ip): bool
@@ -191,6 +201,11 @@ class LaravelServerAnalytics
             if ($this->ipInCidr($ip, $cidr)) {
                 return true;
             }
+        }
+
+        $knownASNIp = AnalyticsBlockIp::query()->where('ip', $ip)->first();
+        if ($knownASNIp) {
+            return true;
         }
 
         return false;
