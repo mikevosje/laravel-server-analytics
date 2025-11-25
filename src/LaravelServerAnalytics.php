@@ -146,11 +146,41 @@ class LaravelServerAnalytics
         $asn = $details->asn ?? ($details->all["org"] ?? null);
 
 // OVH ASNs
-        $ovhAsns = ["AS16276", "AS35540", "AS43996"];
+        $blockedAsns = [
+            // OVH
+            "AS16276",
+            "AS35540",
+            "AS43996",
+            // AWS
+            "AS16509",
+            "AS14618",
+
+            // Hetzner
+            "AS24940",
+            "AS213230",
+
+            // OVH
+            "AS16276",
+            "AS35540",
+            "AS43996",
+
+            // DigitalOcean
+            "AS14061",
+            "AS200130",
+
+            // Linode
+            "AS63949",
+
+            //microsoft
+            "AS8075",
+            "AS8068",
+            "AS8069",
+            "AS3598"
+        ];
 
         return $asn &&
-            (in_array($asn, $ovhAsns, true) ||
-                !empty(array_filter($ovhAsns, static fn($n) => str_contains($asn, $n))));
+            (in_array($asn, $blockedAsns, true) ||
+                !empty(array_filter($blockedAsns, static fn($n) => str_contains($asn, $n))));
     }
 
     function isKnownBotIp(string $ip): bool
