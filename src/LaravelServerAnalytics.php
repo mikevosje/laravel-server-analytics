@@ -125,9 +125,9 @@ class LaravelServerAnalytics
             return false;
         }
 
-        if($this->checkIP($request->ip())) {
-            return false;
-        }
+//        if($this->checkIP($request->ip())) {
+//            return false;
+//        }
 
         if ($this->inExcludeRoutesArray($request) || $this->inExcludeMethodsArray($request)) {
             return false;

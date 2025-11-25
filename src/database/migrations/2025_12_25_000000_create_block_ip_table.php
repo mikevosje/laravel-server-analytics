@@ -11,7 +11,7 @@ class CreateBlockIpTable extends Migration
 {
     public function up()
     {
-        Schema::create('analytics_block_ip', function (Blueprint $table) {
+        Schema::create('analytics_block_ips', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->timestamps();
             $table->string('ip')->index();
