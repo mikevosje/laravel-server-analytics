@@ -9,6 +9,8 @@ use OhSeeSoftware\LaravelServerAnalytics\Models\Analytics;
 use OhSeeSoftware\LaravelServerAnalytics\Models\AnalyticsBlockIp;
 use Symfony\Component\HttpFoundation\Response;
 use ipinfo\ipinfo\IPinfo;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class LaravelServerAnalytics
 {
@@ -125,9 +127,9 @@ class LaravelServerAnalytics
             return false;
         }
 
-//        if($this->checkIP($request->ip())) {
-//            return false;
-//        }
+        if($this->checkIP($request->ip())) {
+            return false;
+        }
 
         if ($this->inExcludeRoutesArray($request) || $this->inExcludeMethodsArray($request)) {
             return false;
@@ -141,17 +143,31 @@ class LaravelServerAnalytics
     }
 
     public function checkIP(string $ip) : bool {
-        $ipinfo = new IPinfo();
-        $details = $ipinfo->getDetails($ip);
+        $result = DB::table('ipinfo_lite')
+            ->whereRaw(
+                "(INSTR(?, ':') = 0 AND INET_ATON(?) BETWEEN ip_start AND ip_end)
+             OR
+             (INSTR(?, ':') > 0 AND INET6_ATON(?) BETWEEN ipv6_start AND ipv6_end)",
+                [$ip, $ip, $ip, $ip]
+            )
+            ->first();
 
-        $asn = $details->asn ?? ($details->all["org"] ?? null);
+        Log::debug('Checking IP ' . $ip);
+
+        $asn = $result ? $result->asn : null;
+
+
+        if(!$asn) {
+
+            Log::debug('Checking IP ' . $ip . ' with NO ASN');
+
+            return false;
+        }
+
+        Log::debug('Checking IP ' . $ip . ' with ASN ' . $asn);
 
 // OVH ASNs
         $blockedAsns = [
-            // OVH
-            "AS16276",
-            "AS35540",
-            "AS43996",
             // AWS
             "AS16509",
             "AS14618",
