@@ -23,7 +23,8 @@
         "illuminate/bus": ">=8",
         "illuminate/queue": ">=8",
         "illuminate/support": ">=8",
-        "jaybizzle/crawler-detect": "^1.2"
+        "jaybizzle/crawler-detect": "^1.2",
+        "ipinfo/ipinfo": "^3.3"
     },
     "require-dev": {
         "laravel/legacy-factories": "^1.0.4",

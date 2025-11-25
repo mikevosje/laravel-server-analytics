@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Jaybizzle\CrawlerDetect\CrawlerDetect;
 use OhSeeSoftware\LaravelServerAnalytics\Models\Analytics;
 use Symfony\Component\HttpFoundation\Response;
+use ipinfo\ipinfo\IPinfo;
 
 class LaravelServerAnalytics
 {
@@ -123,6 +124,10 @@ class LaravelServerAnalytics
             return false;
         }
 
+        if($this->checkIP($request->ip())) {
+            return false;
+        }
+
         if ($this->inExcludeRoutesArray($request) || $this->inExcludeMethodsArray($request)) {
             return false;
         }
@@ -132,6 +137,20 @@ class LaravelServerAnalytics
         }
 
         return true;
+    }
+
+    public function checkIP(string $ip) : bool {
+        $ipinfo = new IPinfo();
+        $details = $ipinfo->getDetails($ip);
+
+        $asn = $details->asn ?? ($details->all["org"] ?? null);
+
+// OVH ASNs
+        $ovhAsns = ["AS16276", "AS35540", "AS43996"];
+
+        return $asn &&
+            (in_array($asn, $ovhAsns, true) ||
+                !empty(array_filter($ovhAsns, static fn($n) => str_contains($asn, $n))));
     }
 
     function isKnownBotIp(string $ip): bool
@@ -176,6 +195,8 @@ class LaravelServerAnalytics
 
         return ($ipLong & $maskLong) === ($subnetLong & $maskLong);
     }
+
+
 
     private function getKnownBotRanges(): array
     {
