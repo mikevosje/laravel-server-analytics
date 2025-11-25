@@ -7,7 +7,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use OhSeeSoftware\LaravelServerAnalytics\Facades\ServerAnalytics;
 
-class CreateBlockTable extends Migration
+class CreateBlockIpTable extends Migration
 {
     public function up()
     {
